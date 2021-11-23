@@ -1,0 +1,9 @@
+server:
+  port: ":8088"
+crypto:
+  URI: "https://min-api.cryptocompare.com/data/pricemultifull"
+  timeout: "30s"
+scheduler:
+  fsyms: ["BTC", "XRP", "ETH", "BCH", "EOS", "LTC", "XMR", "DASH"]
+  tsyms: ["USD", "EUR", "GBP", "JPY", "RUR"]
+  sleep: "10s"
