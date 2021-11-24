@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,7 @@ import (
 
 	"micropairs/internal/scheduler"
 	"micropairs/pkg/client/cryptocompare"
+	"micropairs/pkg/client/db"
 )
 
 const (
@@ -23,6 +25,7 @@ type Server struct {
 	log       *log.Logger
 	client    *cryptocompare.Client
 	scheduler *scheduler.Engine
+	db        *db.Client
 }
 
 func NewCryptoServer(client *http.Client) *Server {
@@ -31,6 +34,7 @@ func NewCryptoServer(client *http.Client) *Server {
 		r:      gin.Default(),
 		log:    logger,
 		client: cryptocompare.NewClient(client, logger),
+		db:     db.NewClient(),
 	}
 }
 func (s *Server) WithScheduler(client *http.Client) {
@@ -49,6 +53,9 @@ func (s *Server) Run() error {
 		gin.Recovery(),
 		gin.Logger(),
 	)
+	s.db.Connect()
+	s.db.CreateSchema()
+
 	s.r.GET("/price", s.handleRequest)
 	err := s.r.Run(viper.GetString(configPort))
 	return err
@@ -70,8 +77,20 @@ func (s *Server) handleRequest(c *gin.Context) {
 	raw, err := s.client.Request(c, fsyms, tsyms)
 	if err != nil {
 		s.log.Error("err on client request", err)
-		c.Status(http.StatusBadGateway)
-		return
+		s.log.Info("trying to get last data from db")
+		if raw = s.GetDataFromDB(fsyms, tsyms); raw == nil {
+			c.Status(http.StatusBadGateway)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, raw)
+}
+
+func (s *Server) GetDataFromDB(fsyms, tsyms []string) json.RawMessage {
+	raw, err := s.db.GetLastRawJSON()
+	if err != nil {
+		s.log.Error("Got an error from db", err)
+		return nil
+	}
+	return raw
 }

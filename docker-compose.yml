@@ -3,7 +3,7 @@ services:
   db:
     image: mysql:8
     environment:
-      MYSQL_DATABASE: links
+      MYSQL_DATABASE: crypto
       MYSQL_USER: docker
       MYSQL_PASSWORD: docker
       MYSQL_ROOT_PASSWORD: root
@@ -12,9 +12,9 @@ services:
   
   app:
     build:
-      context: ./
+      context: ./build/service/
       dockerfile: Dockerfile
     ports: 
-      - "4000:4000"
+      - "8088:8088"
     depends_on: 
       - db

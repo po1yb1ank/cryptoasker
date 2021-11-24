@@ -8,4 +8,8 @@ scheduler:
   tsyms: ["USD", "EUR", "GBP", "JPY", "RUR"]
   sleep: "10s"
 db:
-  port: ":4000"
+  port: ":3306"
+  user: "docker"
+  password: "docker"
+  name: "crypto"
+  schema: "CREATE TABLE `cryptopairs` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,`rawjson` text NOT NULL, `timestamp` timestamp NOT NULL)"
