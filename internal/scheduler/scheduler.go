@@ -3,11 +3,13 @@ package scheduler
 import (
 	"context"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"micropairs/pkg/client/cryptocompare"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+
+	"micropairs/pkg/client/cryptocompare"
 )
 
 const (
@@ -35,8 +37,9 @@ func NewScheduler(client *http.Client, logger *log.Logger) *Engine {
 	}
 }
 func (e *Engine) Start(ctx context.Context) {
-	go func(ctx context.Context) {
-		for {
+	ticker := time.NewTicker(e.sleep)
+	go func(ctx context.Context, ticker *time.Ticker) {
+		for range ticker.C {
 			raw, err := e.cryptoClient.Request(ctx, e.fsyms, e.tsyms)
 			if err != nil {
 				e.log.WithError(err).Error("Scheduler problem")
@@ -44,7 +47,6 @@ func (e *Engine) Start(ctx context.Context) {
 			if raw != nil {
 				e.ch <- raw
 			}
-			time.Sleep(e.sleep)
 		}
-	}(ctx)
+	}(ctx, ticker)
 }

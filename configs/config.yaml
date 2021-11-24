@@ -7,3 +7,5 @@ scheduler:
   fsyms: ["BTC", "XRP", "ETH", "BCH", "EOS", "LTC", "XMR", "DASH"]
   tsyms: ["USD", "EUR", "GBP", "JPY", "RUR"]
   sleep: "10s"
+db:
+  port: ":4000"

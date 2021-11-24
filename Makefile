@@ -1,4 +1,4 @@
 run:
-	go run ./cmd/serve/main.go
+	go run ./cmd/servelocal/serve.go
 lint:
 	golangci-lint run ./...

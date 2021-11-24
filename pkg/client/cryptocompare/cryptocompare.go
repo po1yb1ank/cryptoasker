@@ -3,12 +3,13 @@ package cryptocompare
 import (
 	"context"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const (

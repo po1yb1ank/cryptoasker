@@ -2,12 +2,14 @@ package server
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
 	"micropairs/internal/scheduler"
 	"micropairs/pkg/client/cryptocompare"
-	"net/http"
 )
 
 const (

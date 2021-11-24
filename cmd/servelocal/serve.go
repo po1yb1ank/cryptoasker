@@ -1,17 +1,19 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"log"
-	"micropairs/configs"
-	"micropairs/internal/server"
 	"net/http"
 	"sync"
+
+	"github.com/spf13/viper"
+
+	"micropairs/configs"
+	"micropairs/internal/server"
 )
 
 func main() {
-	viper.Set(configs.CFGPATH,"../../configs/" )
-	if err := configs.InitConfig(); err != nil{
+	viper.Set(configs.CFGPATH, "../../configs/")
+	if err := configs.InitConfig(); err != nil {
 		log.Fatal("Can't read config. ", err)
 	}
 
@@ -20,7 +22,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		err := s.Run()
-		if err != nil{
+		if err != nil {
 			log.Fatal("Server error", err)
 		}
 	}()

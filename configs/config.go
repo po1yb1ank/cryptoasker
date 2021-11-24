@@ -3,9 +3,11 @@ package configs
 import (
 	"github.com/spf13/viper"
 )
+
+// CFGPATH default cfg path env name
 const CFGPATH = "CFG_PATH"
 
-func getDefaultPath()string{
+func getDefaultPath() string {
 	viper.AutomaticEnv()
 	return viper.GetString(CFGPATH)
 }
