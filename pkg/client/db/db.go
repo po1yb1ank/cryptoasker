@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	// register driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
@@ -52,7 +53,7 @@ func (c *Client) CreateSchema() *Client {
 }
 func (c *Client) InsertRawJSON(rawjson json.RawMessage) error {
 	c.Lock()
-	_, err := c.conn.Exec("INSERT INTO  (rawjson, timestamp) VALUES(\"" + string(rawjson) + "\"," + timestamp() + ")")
+	_, err := c.conn.Exec("INSERT INTO  (rawjson, timestamp) VALUES(?,?)", string(rawjson), timestamp())
 	c.Unlock()
 	if err != nil {
 		return err
@@ -63,10 +64,16 @@ func (c *Client) GetLastRawJSON() (rawjson json.RawMessage, err error) {
 	c.Lock()
 	rows, err := c.conn.Query("SELECT rawjson FROM cryptopairs c1 WHERE timestamp = " +
 		"(SELECT MAX(timestamp) FROM cryptopairs c2 WHERE c1.id=c2.id) ORDER BY id")
-	c.Unlock()
 	if err != nil {
 		return nil, err
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	c.Unlock()
+	defer func() {
+		_ = rows.Close()
+	}()
 	if rows.Next() {
 		if err = rows.Scan(&rawjson); err != nil {
 			return nil, err

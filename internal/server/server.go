@@ -16,6 +16,8 @@ import (
 
 const (
 	configPort = "server.port"
+)
+const (
 	queryFsyms = "fsyms"
 	queryTsyms = "tsyms"
 )
@@ -53,7 +55,9 @@ func (s *Server) Run() error {
 		gin.Recovery(),
 		gin.Logger(),
 	)
-	s.db.Connect()
+	if err := s.db.Connect(); err != nil {
+		return err
+	}
 	s.db.CreateSchema()
 
 	s.r.GET("/price", s.handleRequest)
@@ -76,7 +80,7 @@ func (s *Server) handleRequest(c *gin.Context) {
 	}
 	raw, err := s.client.Request(c, fsyms, tsyms)
 	if err != nil {
-		s.log.Error("err on client request", err)
+		s.log.WithError(err).Error("err on client request")
 		s.log.Info("trying to get last data from db")
 		if raw = s.GetDataFromDB(fsyms, tsyms); raw == nil {
 			c.Status(http.StatusBadGateway)
@@ -89,7 +93,7 @@ func (s *Server) handleRequest(c *gin.Context) {
 func (s *Server) GetDataFromDB(fsyms, tsyms []string) json.RawMessage {
 	raw, err := s.db.GetLastRawJSON()
 	if err != nil {
-		s.log.Error("Got an error from db", err)
+		s.log.WithError(err).Error("Got an error from db")
 		return nil
 	}
 	return raw
