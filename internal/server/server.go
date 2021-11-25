@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 
 	"micropairs/internal/scheduler"
 	"micropairs/pkg/client/cryptocompare"
@@ -96,5 +97,6 @@ func (s *Server) GetDataFromDB(fsyms, tsyms []string) json.RawMessage {
 		s.log.WithError(err).Error("Got an error from db")
 		return nil
 	}
+	res := gjson.Get(string(raw))
 	return raw
 }
