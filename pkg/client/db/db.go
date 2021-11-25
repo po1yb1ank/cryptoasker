@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/json"
-	"sync"
 	"time"
 
 	// register driver
@@ -16,11 +15,9 @@ const (
 	configUser     = "db.user"
 	configPassword = "db.password"
 	configDBName   = "db.name"
-	configSchema   = "db.schema"
 )
 
 type Client struct {
-	sync.Mutex
 	port     string
 	user     string
 	password string
@@ -47,37 +44,31 @@ func (c *Client) Connect() error {
 }
 func (c *Client) CreateSchema() *Client {
 	if c.conn != nil {
-		c.conn.MustExec(viper.GetString(configSchema))
+		c.conn.MustExec("CREATE TABLE `cryptopairs` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY," +
+			"`rawjson` json NOT NULL, `timestamp` timestamp NOT NULL)")
 	}
 	return c
 }
 func (c *Client) InsertRawJSON(rawjson json.RawMessage) error {
-	c.Lock()
-	_, err := c.conn.Exec("INSERT INTO  (rawjson, timestamp) VALUES(?,?)", string(rawjson), timestamp())
-	c.Unlock()
+	_, err := c.conn.Exec("INSERT INTO cryptopairs (rawjson, timestamp) VALUES(?,?)",rawjson, timestamp())
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func (c *Client) GetLastRawJSON() (rawjson json.RawMessage, err error) {
-	c.Lock()
-	rows, err := c.conn.Query("SELECT rawjson FROM cryptopairs c1 WHERE timestamp = " +
-		"(SELECT MAX(timestamp) FROM cryptopairs c2 WHERE c1.id=c2.id) ORDER BY id")
+	rows, err := c.conn.Query("SELECT rawjson FROM cryptopairs ORDER BY timestamp DESC LIMIT 1")
 	if err != nil {
 		return nil, err
 	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	c.Unlock()
-	defer func() {
-		_ = rows.Close()
-	}()
+	defer rows.Close()
 	if rows.Next() {
 		if err = rows.Scan(&rawjson); err != nil {
 			return nil, err
 		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 	return rawjson, err
 }

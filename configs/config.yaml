@@ -12,4 +12,3 @@ db:
   user: "docker"
   password: "docker"
   name: "crypto"
-  schema: "CREATE TABLE `cryptopairs` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,`rawjson` text NOT NULL, `timestamp` timestamp NOT NULL)"
