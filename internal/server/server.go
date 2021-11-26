@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/tidwall/gjson"
 
 	"micropairs/internal/scheduler"
 	"micropairs/pkg/client/cryptocompare"
 	"micropairs/pkg/client/db"
+	"micropairs/pkg/helper"
 )
 
 const (
@@ -63,6 +63,7 @@ func (s *Server) Run() error {
 
 	s.r.GET("/price", s.handleRequest)
 	err := s.r.Run(viper.GetString(configPort))
+	go s.UpdateOnScheduler()
 	return err
 }
 
@@ -83,7 +84,7 @@ func (s *Server) handleRequest(c *gin.Context) {
 	if err != nil {
 		s.log.WithError(err).Error("err on client request")
 		s.log.Info("trying to get last data from db")
-		if raw = s.GetDataFromDB(fsyms, tsyms); raw == nil {
+		if raw, err = s.GetDataFromDB(fsyms, tsyms); err != nil {
 			c.Status(http.StatusBadGateway)
 			return
 		}
@@ -91,12 +92,23 @@ func (s *Server) handleRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, raw)
 }
 
-func (s *Server) GetDataFromDB(fsyms, tsyms []string) json.RawMessage {
+func (s *Server) GetDataFromDB(fsyms, tsyms []string) (json.RawMessage, error) {
 	raw, err := s.db.GetLastRawJSON()
 	if err != nil {
 		s.log.WithError(err).Error("Got an error from db")
-		return nil
+		return nil, err
 	}
-	res := gjson.Get(string(raw))
-	return raw
+	res, err := helper.GetPairsFromRawJSON(fsyms, tsyms, raw)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (s *Server) UpdateOnScheduler() {
+	for json := range s.scheduler.Ch {
+		if err := s.db.InsertRawJSON(json); err != nil {
+			continue
+		}
+	}
 }

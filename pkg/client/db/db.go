@@ -50,7 +50,7 @@ func (c *Client) CreateSchema() *Client {
 	return c
 }
 func (c *Client) InsertRawJSON(rawjson json.RawMessage) error {
-	_, err := c.conn.Exec("INSERT INTO cryptopairs (rawjson, timestamp) VALUES(?,?)",rawjson, timestamp())
+	_, err := c.conn.Exec("INSERT INTO cryptopairs (rawjson, timestamp) VALUES(?,?)", rawjson, timestamp())
 	if err != nil {
 		return err
 	}

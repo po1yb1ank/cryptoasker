@@ -21,7 +21,7 @@ const (
 type Engine struct {
 	cryptoClient *cryptocompare.Client
 	log          *log.Logger
-	ch           chan json.RawMessage
+	Ch           chan json.RawMessage
 	tsyms, fsyms []string
 	sleep        time.Duration
 }
@@ -30,7 +30,7 @@ func NewScheduler(client *http.Client, logger *log.Logger) *Engine {
 	return &Engine{
 		log:          logger,
 		cryptoClient: cryptocompare.NewClient(client, logger),
-		ch:           make(chan json.RawMessage, 1),
+		Ch:           make(chan json.RawMessage, 1),
 		tsyms:        viper.GetStringSlice(configTsyms),
 		fsyms:        viper.GetStringSlice(configFsyms),
 		sleep:        viper.GetDuration(configSleep),
@@ -45,7 +45,7 @@ func (e *Engine) Start(ctx context.Context) {
 				e.log.WithError(err).Error("Scheduler problem")
 			}
 			if raw != nil {
-				e.ch <- raw
+				e.Ch <- raw
 			}
 		}
 	}(ctx, ticker)
